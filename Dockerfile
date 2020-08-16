@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
   postgresql-client \
   yarn \
   vim
+
 WORKDIR /cooklog
 COPY Gemfile Gemfile.lock /cooklog/
 RUN bundle install
