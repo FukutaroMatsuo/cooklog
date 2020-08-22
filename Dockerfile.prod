@@ -5,8 +5,7 @@ RUN apt-get install -y \
   libpq-dev \
   nodejs \
   postgresql-client \
-  yarn \
-  vim
+  yarn
 
 WORKDIR /cooklog
 COPY Gemfile Gemfile.lock /cooklog/
