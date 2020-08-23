@@ -14,8 +14,8 @@ script:
 deploy:
   provider: script
   script:
-    docker build -t registry.heroku.com/$HEROKU_APP_NAME/web -f Dockerfile.prod .;
-    docker push registry.heroku.com/$HEROKU_APP_NAME/web;
+    docker build -t registry.heroku.com/cooklog-matsuo/web -f Dockerfile.prod .;
+    docker push registry.heroku.com/cooklog-matsuo/web;
     heroku run --app cooklog-matsuo rails db:migrate;
   on:
     branch: master
