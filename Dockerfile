@@ -6,7 +6,8 @@ RUN apt-get install -y \
   nodejs \
   postgresql-client \
   yarn \
-  vim
+  vim \
+  imagemagick
 
 WORKDIR /cooklog
 COPY Gemfile Gemfile.lock /cooklog/
