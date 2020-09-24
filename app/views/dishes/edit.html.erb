@@ -34,6 +34,8 @@
         </div>
         <%= f.submit "更新する", class: "btn btn-primary" %>
       <% end %>
+      <%= link_to "料理を削除する", dish_path(@dish), method: :delete,
+                             data: { confirm: "本当にこの料理を削除してよろしいですか？" } %>
     </div>
   </div>
 </div>

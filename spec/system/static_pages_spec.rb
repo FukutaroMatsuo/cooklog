@@ -24,7 +24,6 @@ RSpec.describe "StaticPages", type: :system do
         end
 
         # it "料理のぺージネーションが表示されること" do
-        #   login_for_system(user)
         #   create_list(:dish, 6, user: user)
         #   visit root_path
         #   expect(page).to have_content "みんなの料理 (#{user.dishes.count})"
