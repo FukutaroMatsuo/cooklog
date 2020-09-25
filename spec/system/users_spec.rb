@@ -3,6 +3,7 @@ require 'rails_helper'
 RSpec.describe "Users", type: :system do
   let!(:user) { create(:user) }
   let!(:admin_user) { create(:user, :admin) }
+  let!(:other_user) { create(:user) }
 
   describe "ユーザー一覧ページ" do
     context "管理者ユーザーの場合" do
@@ -18,22 +19,22 @@ RSpec.describe "Users", type: :system do
       end
     end
 
-    context "管理者ユーザー以外の場合" do
-      it "ぺージネーション、自分のアカウントのみ削除ボタンが表示されること" do
-        create_list(:user, 30)
-        login_for_system(user)
-        visit users_path
-        expect(page).to have_css "div.pagination"
-        User.paginate(page: 1).each do |u|
-          expect(page).to have_link u.name, href: user_path(u)
-          if u == user
-            expect(page).to have_content "#{u.name} | 削除"
-          else
-            expect(page).not_to have_content "#{u.name} | 削除"
-          end
-        end
-      end
-    end
+    # context "管理者ユーザー以外の場合" do
+    #   it "ぺージネーション、自分のアカウントのみ削除ボタンが表示されること" do
+    #     create_list(:user, 30)
+    #     login_for_system(user)
+    #     visit users_path
+    #     expect(page).to have_css "div.pagination"
+    #     User.paginate(page: 1).each do |u|
+    #       expect(page).to have_link u.name, href: user_path(u)
+    #       if u == user
+    #         expect(page).to have_content "#{u.name} | 削除"
+    #       else
+    #         expect(page).not_to have_content "#{u.name} | 削除"
+    #       end
+    #     end
+    #   end
+    # end
   end
 
   describe "ユーザー登録ページ" do
@@ -162,5 +163,17 @@ RSpec.describe "Users", type: :system do
         expect(page).to have_css "div.pagination"
       end
     end
+
+    # context "ユーザーのフォロー/アンフォロー処理", js: true do
+    #   it "ユーザーのフォロー/アンフォローができること" do
+    #     login_for_system(user)
+    #     visit user_path(other_user)
+    #     expect(page).to have_button 'フォローする'
+    #     click_button 'フォローする'
+    #     expect(page).to have_button 'フォロー中'
+    #     click_button 'フォロー中'
+    #     expect(page).to have_button 'フォローする'
+    #   end
+    # end
   end
 end
