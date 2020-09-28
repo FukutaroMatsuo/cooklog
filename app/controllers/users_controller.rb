@@ -9,7 +9,8 @@ class UsersController < ApplicationController
 
   def show
     @user = User.find(params[:id])
-    @dishes = @user.dishes.paginate(page: params[:page], per_page: 5)  # 追記
+    @dishes = @user.dishes.paginate(page: params[:page], per_page: 5)
+    @log = Log.new
   end
   
   def new
