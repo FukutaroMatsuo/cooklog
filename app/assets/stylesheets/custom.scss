@@ -1,3 +1,6 @@
+$main-magenta: #dd356e;
+$main-yellow: #fee856;
+
 // ミックスイン
 @mixin box_sizing {
   -moz-box-sizing: border-box;
@@ -167,6 +170,9 @@ span.picture {
 // 「新しい料理を作る」ボタン
 .btn-record {
   margin-top: 3em;
+  color: black;
+  background-color: $main-yellow;
+  border-color: $main-yellow;
 }
 
 //// 料理登録ページ ////
@@ -428,4 +434,11 @@ h3.dish-name {
 
 .dish-description {
   margin-top: 10px;
+}
+
+// 「CSV出力」ボタン
+.btn-csv {
+  color: black;
+  background-color: palegreen;
+  border-color: palegreen;
 }
