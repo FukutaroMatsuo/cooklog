@@ -4,7 +4,7 @@ RSpec.describe "Users", type: :system do
   let!(:user) { create(:user) }
   let!(:admin_user) { create(:user, :admin) }
   let!(:other_user) { create(:user) }
-  let!(:dish) { create(:dish, user: user) }
+  let!(:dish) { create(:dish, :ingredients, user: user) }
   let!(:other_dish) { create(:dish, user: other_user) }
 
   describe "ユーザー一覧ページ" do
@@ -21,22 +21,22 @@ RSpec.describe "Users", type: :system do
       end
     end
 
-    # context "管理者ユーザー以外の場合" do
-    #   it "ぺージネーション、自分のアカウントのみ削除ボタンが表示されること" do
-    #     create_list(:user, 30)
-    #     login_for_system(user)
-    #     visit users_path
-    #     expect(page).to have_css "div.pagination"
-    #     User.paginate(page: 1).each do |u|
-    #       expect(page).to have_link u.name, href: user_path(u)
-    #       if u == user
-    #         expect(page).to have_content "#{u.name} | 削除"
-    #       else
-    #         expect(page).not_to have_content "#{u.name} | 削除"
-    #       end
-    #     end
-    #   end
-    # end
+    context "管理者ユーザー以外の場合" do
+      it "ぺージネーション、自分のアカウントのみ削除ボタンが表示されること" do
+        create_list(:user, 30)
+        login_for_system(user)
+        visit users_path
+        expect(page).to have_css "div.pagination"
+        User.paginate(page: 1).each do |u|
+          expect(page).to have_link u.name, href: user_path(u)
+          if u == user
+            expect(page).to have_content "#{u.name} | 削除"
+          else
+            expect(page).not_to have_content "#{u.name} | 削除"
+          end
+        end
+      end
+    end
   end
 
   describe "ユーザー登録ページ" do
@@ -112,13 +112,13 @@ RSpec.describe "Users", type: :system do
       expect(user.reload.email).not_to eq ""
     end
 
-    # context "アカウント削除処理", js: true do
-    #   it "正しく削除できること" do
-    #     click_link "アカウントを削除する"
-    #     page.driver.browser.switch_to.alert.accept
-    #     expect(page).to have_content "自分のアカウントを削除しました"
-    #   end
-    # end
+    context "アカウント削除処理", js: true do
+      it "正しく削除できること" do
+        click_link "アカウントを削除する"
+        page.driver.browser.switch_to.alert.accept
+        expect(page).to have_content "自分のアカウントを削除しました"
+      end
+    end
   end
 
   describe "プロフィールページ" do
@@ -153,8 +153,15 @@ RSpec.describe "Users", type: :system do
 
       it "料理の情報が表示されていることを確認" do
         Dish.take(5).each do |dish|
-          （省略）
+          expect(page).to have_link dish.name
+          expect(page).to have_content dish.description
+          expect(page).to have_content dish.user.name
+          expect(page).to have_content dish.required_time
           expect(page).to have_content "★" * dish.popularity + "☆" * (5 - dish.popularity)
+          dish.ingredients.each do |i|
+            expect(page).to have_content i.name
+            expect(page).to have_content i.quantity
+          end
         end
       end
 
@@ -163,17 +170,17 @@ RSpec.describe "Users", type: :system do
       end
     end
 
-    # context "ユーザーのフォロー/アンフォロー処理", js: true do
-    #   it "ユーザーのフォロー/アンフォローができること" do
-    #     login_for_system(user)
-    #     visit user_path(other_user)
-    #     expect(page).to have_button 'フォローする'
-    #     click_button 'フォローする'
-    #     expect(page).to have_button 'フォロー中'
-    #     click_button 'フォロー中'
-    #     expect(page).to have_button 'フォローする'
-    #   end
-    # end
+    context "ユーザーのフォロー/アンフォロー処理", js: true do
+      it "ユーザーのフォロー/アンフォローができること" do
+        login_for_system(user)
+        visit user_path(other_user)
+        expect(page).to have_button 'フォローする'
+        click_button 'フォローする'
+        expect(page).to have_button 'フォロー中'
+        click_button 'フォロー中'
+        expect(page).to have_button 'フォローする'
+      end
+    end
 
     context "お気に入り登録/解除" do
       before do
@@ -188,171 +195,209 @@ RSpec.describe "Users", type: :system do
         expect(user.favorite?(dish)).to be_falsey
       end
 
-      # it "トップページからお気に入り登録/解除ができること", js: true do
-      #   visit root_path
-      #   link = find('.like')
-      #   expect(link[:href]).to include "/favorites/#{dish.id}/create"
-      #   link.click
-      #   link = find('.unlike')
-      #   expect(link[:href]).to include "/favorites/#{dish.id}/destroy"
-      #   link.click
-      #   link = find('.like')
-      #   expect(link[:href]).to include "/favorites/#{dish.id}/create"
-      # end
+      it "トップページからお気に入り登録/解除ができること", js: true do
+        visit root_path
+        link = find('.like')
+        expect(link[:href]).to include "/favorites/#{dish.id}/create"
+        link.click
+        link = find('.unlike')
+        expect(link[:href]).to include "/favorites/#{dish.id}/destroy"
+        link.click
+        link = find('.like')
+        expect(link[:href]).to include "/favorites/#{dish.id}/create"
+      end
 
-      # it "ユーザー個別ページからお気に入り登録/解除ができること", js: true do
-      #   visit user_path(user)
-      #   link = find('.like')
-      #   expect(link[:href]).to include "/favorites/#{dish.id}/create"
-      #   link.click
-      #   link = find('.unlike')
-      #   expect(link[:href]).to include "/favorites/#{dish.id}/destroy"
-      #   link.click
-      #   link = find('.like')
-      #   expect(link[:href]).to include "/favorites/#{dish.id}/create"
-      # end
+      it "ユーザー個別ページからお気に入り登録/解除ができること", js: true do
+        visit user_path(user)
+        link = find('.like')
+        expect(link[:href]).to include "/favorites/#{dish.id}/create"
+        link.click
+        link = find('.unlike')
+        expect(link[:href]).to include "/favorites/#{dish.id}/destroy"
+        link.click
+        link = find('.like')
+        expect(link[:href]).to include "/favorites/#{dish.id}/create"
+      end
 
-      # it "料理個別ページからお気に入り登録/解除ができること", js: true do
-      #   visit dish_path(dish)
-      #   link = find('.like')
-      #   expect(link[:href]).to include "/favorites/#{dish.id}/create"
-      #   link.click
-      #   link = find('.unlike')
-      #   expect(link[:href]).to include "/favorites/#{dish.id}/destroy"
-      #   link.click
-      #   link = find('.like')
-      #   expect(link[:href]).to include "/favorites/#{dish.id}/create"
-      # end
+      it "料理個別ページからお気に入り登録/解除ができること", js: true do
+        visit dish_path(dish)
+        link = find('.like')
+        expect(link[:href]).to include "/favorites/#{dish.id}/create"
+        link.click
+        link = find('.unlike')
+        expect(link[:href]).to include "/favorites/#{dish.id}/destroy"
+        link.click
+        link = find('.like')
+        expect(link[:href]).to include "/favorites/#{dish.id}/create"
+      end
 
-      # it "お気に入り一覧ページが期待通り表示されること" do
-      #   visit favorites_path
-      #   expect(page).not_to have_css ".favorite-dish"
-      #   user.favorite(dish)
-      #   user.favorite(other_dish)
-      #   visit favorites_path
-      #   expect(page).to have_css ".favorite-dish", count: 2
-      #   expect(page).to have_content dish.name
-      #   expect(page).to have_content dish.description
-      #   expect(page).to have_content "cooked by #{user.name}"
-      #   expect(page).to have_link user.name, href: user_path(user)
-      #   expect(page).to have_content other_dish.name
-      #   expect(page).to have_content other_dish.description
-      #   expect(page).to have_content "cooked by #{other_user.name}"
-      #   expect(page).to have_link other_user.name, href: user_path(other_user)
-      #   user.unfavorite(other_dish)
-      #   visit favorites_path
-      #   expect(page).to have_css ".favorite-dish", count: 1
-      #   expect(page).to have_content dish.name
-      # end
+      it "お気に入り一覧ページが期待通り表示されること" do
+        visit favorites_path
+        expect(page).not_to have_css ".favorite-dish"
+        user.favorite(dish)
+        user.favorite(other_dish)
+        visit favorites_path
+        expect(page).to have_css ".favorite-dish", count: 2
+        expect(page).to have_content dish.name
+        expect(page).to have_content dish.description
+        expect(page).to have_content "cooked by #{user.name}"
+        expect(page).to have_link user.name, href: user_path(user)
+        expect(page).to have_content other_dish.name
+        expect(page).to have_content other_dish.description
+        expect(page).to have_content "cooked by #{other_user.name}"
+        expect(page).to have_link other_user.name, href: user_path(other_user)
+        user.unfavorite(other_dish)
+        visit favorites_path
+        expect(page).to have_css ".favorite-dish", count: 1
+        expect(page).to have_content dish.name
+      end
     end
 
-    # context "通知処理" do
-    #   before do
-    #     login_for_request(user)
-    #   end
-  
-    #   context "自分以外のユーザーの料理に対して" do
-    #     it "お気に入り登録によって通知が作成されること" do
-    #       post "/favorites/#{other_dish.id}/create"
-    #       expect(user.reload.notification).to be_falsey
-    #       expect(other_user.reload.notification).to be_truthy
-    #     end
-  
-    #     it "コメントによって通知が作成されること" do
-    #       post comments_path, params: { dish_id: other_dish.id,
-    #                                     comment: { content: "最高です！" } }
-    #       expect(user.reload.notification).to be_falsey
-    #       expect(other_user.reload.notification).to be_truthy
-    #     end
-    #   end
-  
-    #   context "自分の料理に対して" do
-    #     it "お気に入り登録によって通知が作成されないこと" do
-    #       post "/favorites/#{dish.id}/create"
-    #       expect(user.reload.notification).to be_falsey
-    #     end
-  
-    #     it "コメントによって通知が作成されないこと" do
-    #       post comments_path, params: { dish_id: dish.id,
-    #                                     comment: { content: "最高です！" } }
-    #       expect(user.reload.notification).to be_falsey
-    #     end
-    #   end
-    # end
-
-    context "リスト登録/解除" do
+    context "通知生成" do
       before do
         login_for_system(user)
       end
-  
-      it "料理のお気に入り登録/解除ができること" do
-        expect(user.list?(dish)).to be_falsey
-        user.list(dish)
-        expect(user.list?(dish)).to be_truthy
-        user.unlist(List.first)
-        expect(user.list?(dish)).to be_falsey
+
+      context "自分以外のユーザーの料理に対して" do
+        before do
+          visit dish_path(other_dish)
+        end
+
+        it "お気に入り登録によって通知が作成されること" do
+          find('.like').click
+          visit dish_path(other_dish)
+          expect(page).to have_css 'li.no_notification'
+          logout
+          login_for_system(other_user)
+          expect(page).to have_css 'li.new_notification'
+          visit notifications_path
+          expect(page).to have_css 'li.no_notification'
+          expect(page).to have_content "あなたの料理が#{user.name}さんにお気に入り登録されました。"
+          expect(page).to have_content other_dish.name
+          expect(page).to have_content other_dish.description
+          expect(page).to have_content other_dish.created_at.strftime("%Y/%m/%d(%a) %H:%M")
+        end
+
+        it "コメントによって通知が作成されること" do
+          fill_in "comment_content", with: "コメントしました"
+          click_button "コメント"
+          expect(page).to have_css 'li.no_notification'
+          logout
+          login_for_system(other_user)
+          expect(page).to have_css 'li.new_notification'
+          visit notifications_path
+          expect(page).to have_css 'li.no_notification'
+          expect(page).to have_content "あなたの料理に#{user.name}さんがコメントしました。"
+          expect(page).to have_content '「コメントしました」'
+          expect(page).to have_content other_dish.name
+          expect(page).to have_content other_dish.description
+          expect(page).to have_content other_dish.created_at.strftime("%Y/%m/%d(%a) %H:%M")
+        end
       end
-  
-      # it "トップページからリスト登録/解除ができること", js: true do
-      #   visit root_path
-      #   link = find('.list')
-      #   expect(link[:href]).to include "/lists/#{dish.id}/create"
-      #   link.click
-      #   link = find('.unlist')
-      #   expect(link[:href]).to include "/lists/#{List.first.id}/destroy"
-      #   link.click
-      #   link = find('.list')
-      #   expect(link[:href]).to include "/lists/#{dish.id}/create"
-      # end
-  
-      # it "ユーザー個別ページからリスト登録/解除ができること", js: true do
-      #   visit user_path(user)
-      #   link = find('.list')
-      #   expect(link[:href]).to include "/lists/#{dish.id}/create"
-      #   link.click
-      #   link = find('.unlist')
-      #   expect(link[:href]).to include "/lists/#{List.first.id}/destroy"
-      #   link.click
-      #   link = find('.list')
-      #   expect(link[:href]).to include "/lists/#{dish.id}/create"
-      # end
-  
-      # it "料理個別ページからリスト登録/解除ができること", js: true do
-      #   link = find('.list')
-      #   expect(link[:href]).to include "/lists/#{dish.id}/create"
-      #   link.click
-      #   link = find('.unlist')
-      #   expect(link[:href]).to include "/lists/#{List.first.id}/destroy"
-      #   link.click
-      #   link = find('.list')
-      #   expect(link[:href]).to include "/lists/#{dish.id}/create"
-      # end
-  
-      it "リスト一覧ページが期待通り表示され、リストから削除することもできること" do
-        visit lists_path
-        expect(page).not_to have_css ".list-dish"
-        user.list(dish)
-        dish_2 = create(:dish, user: user)
-        other_user.list(dish_2)
-        visit lists_path
-        expect(page).to have_css ".list-dish", count: 2
-        expect(page).to have_content dish.name
-        expect(page).to have_content dish.description
-        expect(page).to have_content List.last.created_at.strftime("%Y/%m/%d(%a) %H:%M")
-        expect(page).to have_content "この料理を作る予定リストに追加しました。"
-        expect(page).to have_content dish_2.name
-        expect(page).to have_content dish_2.description
-        expect(page).to have_content List.first.created_at.strftime("%Y/%m/%d(%a) %H:%M")
-        expect(page).to have_content "#{other_user.name}さんがこの料理に食べたいリクエストをしました。"
-        expect(page).to have_link other_user.name, href: user_path(other_user)
-        user.unlist(List.first)
-        visit lists_path
-        expect(page).to have_css ".list-dish", count: 1
-        expect(page).to have_content dish.name
-        find('.unlist').click
-        visit lists_path
-        expect(page).not_to have_css ".list-dish"
+
+      context "自分の料理に対して" do
+        before do
+          visit dish_path(dish)
+        end
+
+        it "お気に入り登録によって通知が作成されないこと" do
+          find('.like').click
+          visit dish_path(dish)
+          expect(page).to have_css 'li.no_notification'
+          visit notifications_path
+          expect(page).not_to have_content 'お気に入りに登録されました。'
+          expect(page).not_to have_content dish.name
+          expect(page).not_to have_content dish.description
+          expect(page).not_to have_content dish.created_at
+        end
+
+        it "コメントによって通知が作成されないこと" do
+          fill_in "comment_content", with: "自分でコメント"
+          click_button "コメント"
+          expect(page).to have_css 'li.no_notification'
+          visit notifications_path
+          expect(page).not_to have_content 'コメントしました。'
+          expect(page).not_to have_content '自分でコメント'
+          expect(page).not_to have_content other_dish.name
+          expect(page).not_to have_content other_dish.description
+          expect(page).not_to have_content other_dish.created_at
+        end
       end
+    end
+  end
+
+  context "リスト登録/解除" do
+    before do
+      login_for_system(user)
+    end
+
+    it "料理のお気に入り登録/解除ができること" do
+      expect(user.list?(dish)).to be_falsey
+      user.list(dish)
+      expect(user.list?(dish)).to be_truthy
+      user.unlist(List.first)
+      expect(user.list?(dish)).to be_falsey
+    end
+
+    it "トップページからリスト登録/解除ができること", js: true do
+      visit root_path
+      link = find('.list')
+      expect(link[:href]).to include "/lists/#{dish.id}/create"
+      link.click
+      link = find('.unlist')
+      expect(link[:href]).to include "/lists/#{List.first.id}/destroy"
+      link.click
+      link = find('.list')
+      expect(link[:href]).to include "/lists/#{dish.id}/create"
+    end
+
+    it "ユーザー個別ページからリスト登録/解除ができること", js: true do
+      visit user_path(user)
+      link = find('.list')
+      expect(link[:href]).to include "/lists/#{dish.id}/create"
+      link.click
+      link = find('.unlist')
+      expect(link[:href]).to include "/lists/#{List.first.id}/destroy"
+      link.click
+      link = find('.list')
+      expect(link[:href]).to include "/lists/#{dish.id}/create"
+    end
+
+    it "料理個別ページからリスト登録/解除ができること", js: true do
+      link = find('.list')
+      expect(link[:href]).to include "/lists/#{dish.id}/create"
+      link.click
+      link = find('.unlist')
+      expect(link[:href]).to include "/lists/#{List.first.id}/destroy"
+      link.click
+      link = find('.list')
+      expect(link[:href]).to include "/lists/#{dish.id}/create"
+    end
+
+    it "リスト一覧ページが期待通り表示され、リストから削除することもできること" do
+      visit lists_path
+      expect(page).not_to have_css ".list-dish"
+      user.list(dish)
+      dish_2 = create(:dish, user: user)
+      other_user.list(dish_2)
+      visit lists_path
+      expect(page).to have_css ".list-dish", count: 2
+      expect(page).to have_content dish.name
+      expect(page).to have_content dish.description
+      expect(page).to have_content List.last.created_at.strftime("%Y/%m/%d(%a) %H:%M")
+      expect(page).to have_content "この料理を作る予定リストに追加しました。"
+      expect(page).to have_content dish_2.name
+      expect(page).to have_content dish_2.description
+      expect(page).to have_content List.first.created_at.strftime("%Y/%m/%d(%a) %H:%M")
+      expect(page).to have_content "#{other_user.name}さんがこの料理に食べたいリクエストをしました。"
+      expect(page).to have_link other_user.name, href: user_path(other_user)
+      user.unlist(List.first)
+      visit lists_path
+      expect(page).to have_css ".list-dish", count: 1
+      expect(page).to have_content dish.name
+      find('.unlist').click
+      visit lists_path
+      expect(page).not_to have_css ".list-dish"
     end
   end
 end
