@@ -5,9 +5,7 @@ class Dish < ApplicationRecord
   has_many :lists, dependent: :destroy
   has_many :logs, dependent: :destroy
   has_many :ingredients, dependent: :destroy
-  # 以下はまとめて検索をかけるメソッド
   accepts_nested_attributes_for :ingredients
-
   default_scope -> { order(created_at: :desc) }
   mount_uploader :picture, PictureUploader
   validates :user_id, presence: true
@@ -22,7 +20,7 @@ class Dish < ApplicationRecord
             },
             allow_nil: true
   validate  :picture_size
-  
+
   # 料理に付属するコメントのフィードを作成
   def feed_comment(dish_id)
     Comment.where("dish_id = ?", dish_id)
