@@ -11,4 +11,4 @@ WORKDIR /cooklog
 COPY Gemfile Gemfile.lock /cooklog/
 RUN bundle install
 COPY . .
-CMD ["rails", "s"]
+CMD ["rails", "s", "-b", "0.0.0.0"]
